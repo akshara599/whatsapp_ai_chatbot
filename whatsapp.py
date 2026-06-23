@@ -10,12 +10,10 @@ def send_whatsapp_message(to, message):
 
     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
 
-
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json"
     }
-
 
     data = {
         "messaging_product": "whatsapp",
@@ -26,7 +24,8 @@ def send_whatsapp_message(to, message):
         }
     }
 
-
     response = requests.post(url, headers=headers, json=data)
+
+    print(response.json())
 
     return response.json()
