@@ -1,26 +1,14 @@
 from fastapi import FastAPI, Request
-import os
+from fastapi.responses import PlainTextResponse
 
 app = FastAPI()
-
-VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
-
-
-# -------------------------
-# 1. WEBHOOK VERIFY (GET)
-# -------------------------
-@app.get("/webhook")
-def verify_webhook(request: Request):
-    params = request.query_params
-afrom fastapi import FastAPI, Request
-
-app = FastAPI()
-
 
 VERIFY_TOKEN = "mysecret123"
 
 
-# 🔵 STEP 1: Meta verification (IMPORTANT)
+# -------------------------
+# 1. WEBHOOK VERIFICATION (GET)
+# -------------------------
 @app.get("/webhook")
 def verify_webhook(request: Request):
 
@@ -29,37 +17,19 @@ def verify_webhook(request: Request):
     challenge = request.query_params.get("hub.challenge")
 
     if mode == "subscribe" and token == VERIFY_TOKEN:
-        return int(challenge)
+        return PlainTextResponse(challenge)
 
-    return {"error": "verification failed"}
+    return PlainTextResponse("Verification failed", status_code=403)
 
 
-# 🔵 STEP 2: Incoming messages
+# -------------------------
+# 2. RECEIVE MESSAGES (POST)
+# -------------------------
 @app.post("/webhook")
 async def webhook(request: Request):
 
     data = await request.json()
-
     print(data)
-
-    return {"status": "ok"}
-    mode = params.get("hub.mode")
-    token = params.get("hub.verify_token")
-    challenge = params.get("hub.challenge")
-
-    if mode == "subscribe" and token == VERIFY_TOKEN:
-        return int(challenge)
-
-    return "Verification failed"
-
-
-# -------------------------
-# 2. RECEIVE MESSAGE (POST)
-# -------------------------
-@app.post("/webhook")
-async def webhook(request: Request):
-
-    data = await request.json()
 
     try:
         message = data["entry"][0]["changes"][0]["value"]["messages"][0]
@@ -67,13 +37,12 @@ async def webhook(request: Request):
         user_text = message["text"]["body"]
         user_number = message["from"]
 
-        # AI response
-        ai_reply = ask_ai(user_text)
+        # dummy AI response (replace later with Gemini/OpenAI)
+        ai_reply = f"You said: {user_text}"
 
-        # send reply to WhatsApp
-        send_whatsapp_message(user_number, ai_reply)
+        print("Reply to send:", ai_reply)
 
-        return {"status": "sent"}
+        return {"status": "ok"}
 
     except Exception as e:
         print("Error:", e)
