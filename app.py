@@ -1,8 +1,13 @@
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 from ai import ask_ai
 from whatsapp import send_whatsapp_message
 
 app = FastAPI()
+
+
+class Message(BaseModel):
+    message: str
 
 
 @app.get("/")
@@ -11,23 +16,21 @@ def home():
 
 
 @app.post("/webhook")
-async def webhook(request: Request):
-
-    data = await request.json()
+def webhook(data: Message):
 
     try:
-        message = data["entry"][0]["changes"][0]["value"]["messages"][0]
-
-        user_text = message["text"]["body"]
-        user_number = message["from"]
+        user_text = data.message
 
         # AI response
         ai_reply = ask_ai(user_text)
 
-        # send back to WhatsApp
-        send_whatsapp_message(user_number, ai_reply)
+        # ❗ IMPORTANT:
+        # WhatsApp logic will NOT work in Swagger test
+        # because there is no "entry/from" structure here
 
-        return {"status": "sent"}
+        return {
+            "reply": ai_reply
+        }
 
     except Exception as e:
         print("Error:", e)
